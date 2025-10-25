@@ -13,14 +13,19 @@ class Renderer(object):
         glClearColor(0.2, 0.2, 0.2, 1.0)
 
         glEnable(GL_DEPTH_TEST)
+        glDepthFunc(GL_LESS)
         glViewport(0,0, self.width, self.height)
+        
+        # Configuración adicional para evitar parpadeo
+        glFrontFace(GL_CCW)
+        glPolygonOffset(1.0, 1.0)
 
         self.camera = Camera(self.width, self.height)
 
         self.scene = []
         
 
-        self.filledMode = False
+        self.filledMode = True
         self.ToggleFilledMode()
 
         self.activeShader = None
@@ -28,7 +33,7 @@ class Renderer(object):
         self.skybox = None
 
         self.pointLight = glm.vec3(0,0,0)
-        self.ambientLight = 0.1
+        self.ambientLight = 0.5
 
 
         self.value = 0.0;
@@ -46,7 +51,8 @@ class Renderer(object):
 
         if self.filledMode:
             glEnable(GL_CULL_FACE)
-            glPolygonMode(GL_FRONT, GL_FILL)
+            glCullFace(GL_BACK)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         else:
             glDisable(GL_CULL_FACE)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
@@ -65,9 +71,17 @@ class Renderer(object):
 
         self.camera.Update()
 
+        # Renderizar skybox primero siempre en modo relleno
         if self.skybox is not None:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            glDepthFunc(GL_LEQUAL)
             self.skybox.Render()
-
+            glDepthFunc(GL_LESS)
+            # Restaurar el modo de polígono según el estado actual
+            if self.filledMode:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            else:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
         if self.activeShader is not None:
             glUseProgram(self.activeShader)
@@ -97,4 +111,3 @@ class Renderer(object):
                                 1, GL_FALSE, glm.value_ptr( obj.GetModelMatrix() ) )
 
             obj.Render()
-

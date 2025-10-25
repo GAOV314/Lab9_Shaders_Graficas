@@ -38,12 +38,35 @@ skyboxTextures = ["skybox/right.jpg",
 rend.CreateSkybox(skyboxTextures)
 
 
-faceModel = Model("models/model.obj")
-faceModel.AddTexture("textures/model.bmp")
+faceModel = Model("model.obj")
+#faceModel.AddTexture("textures/model.bmp")
 faceModel.AddTexture("textures/lava_cracks.jpg")
-faceModel.position.z = -5
+faceModel.position.x = 0
+faceModel.position.y = -2
+faceModel.position.z = -12
+faceModel.scale = glm.vec3(0.05, 0.05, 0.05)
 
 rend.scene.append(faceModel)
+
+print("\n" + "="*60)
+print("CONTROLES DE SHADERS")
+print("="*60)
+print("\nFragment Shaders:")
+print("  1 - Basic Lighting")
+print("  2 - Rainbow/Gradient (NUEVO)")
+print("  3 - Procedural Pattern (NUEVO)")
+print("  4 - Toon Shader")
+print("  5 - Magma Shader")
+print("\nVertex Shaders:")
+print("  7 - Standard")
+print("  8 - Twist (NUEVO)")
+print("  9 - Wave (NUEVO)")
+print("\nOtros controles:")
+print("  F - Toggle Wireframe/Filled")
+print("  Z/X - Ajustar value (intensidad de efectos)")
+print("  Flechas - Mover cámara")
+print("  W/A/S/D/Q/E - Mover luz")
+print("="*60 + "\n")
 
 isRunning = True
 
@@ -63,47 +86,61 @@ while isRunning:
 			if event.key == pygame.K_f:
 				rend.ToggleFilledMode()
 
+			# Fragment Shaders
 			if event.key == pygame.K_1:
 				currFragmentShader = fragment_shader
 				rend.SetShaders(currVertexShader, currFragmentShader)
+				print("Fragment: Basic Lighting")
 
 			if event.key == pygame.K_2:
-				currFragmentShader = toon_shader
+				currFragmentShader = rainbow_shader
 				rend.SetShaders(currVertexShader, currFragmentShader)
+				print("Fragment: Rainbow/Gradient (NUEVO)")
 
 			if event.key == pygame.K_3:
-				currFragmentShader = negative_shader
+				currFragmentShader = pattern_shader
 				rend.SetShaders(currVertexShader, currFragmentShader)
-
+				print("Fragment: Procedural Pattern (NUEVO)")
+			
 			if event.key == pygame.K_4:
+				currFragmentShader = toon_shader
+				rend.SetShaders(currVertexShader, currFragmentShader)
+				print("Fragment: Toon Shader")
+			
+			if event.key == pygame.K_5:
 				currFragmentShader = magma_shader
 				rend.SetShaders(currVertexShader, currFragmentShader)
+				print("Fragment: Magma Shader")
 
-
+			# Vertex Shaders
 			if event.key == pygame.K_7:
 				currVertexShader = vertex_shader
 				rend.SetShaders(currVertexShader, currFragmentShader)
+				print("Vertex: Standard")
 
 			if event.key == pygame.K_8:
-				currVertexShader = fat_shader
+				currVertexShader = twist_shader
 				rend.SetShaders(currVertexShader, currFragmentShader)
+				print("Vertex: Twist (NUEVO)")
 
 			if event.key == pygame.K_9:
-				currVertexShader = water_shader
+				currVertexShader = wave_shader
 				rend.SetShaders(currVertexShader, currFragmentShader)
+				print("Vertex: Wave (NUEVO)")
+
 
 
 	if keys[K_UP]:
-		rend.camera.position.z += 1 * deltaTime
+		rend.camera.position.z -= 5 * deltaTime
 
 	if keys[K_DOWN]:
-		rend.camera.position.z -= 1 * deltaTime
+		rend.camera.position.z += 5 * deltaTime
 
 	if keys[K_RIGHT]:
-		rend.camera.position.x += 1 * deltaTime
+		rend.camera.position.x += 5 * deltaTime
 
 	if keys[K_LEFT]:
-		rend.camera.position.x -= 1 * deltaTime
+		rend.camera.position.x -= 5 * deltaTime
 
 
 
@@ -136,7 +173,7 @@ while isRunning:
 
 
 
-	faceModel.rotation.y += 45 * deltaTime
+	# faceModel.rotation.y += 45 * deltaTime
 
 
 	rend.Render()

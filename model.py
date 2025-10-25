@@ -124,7 +124,6 @@ class Model(object):
 		self.texCoordsBuffer.Use(1, 2)
 		self.normalsBuffer.Use(2, 3)
 
-
 		glDrawArrays(GL_TRIANGLES, 0, self.vertexCount)
 
 		glDisableVertexAttribArray(0)
