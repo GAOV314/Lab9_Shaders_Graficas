@@ -68,7 +68,140 @@ void main()
 '''
 
 
-# NUEVO SHADER 2: Procedural Pattern Shader - Patrones geométricos complejos
+# NUEVO SHADER 2: Cosmic Shader - Galaxia con nebulosas y estrellas
+cosmic_shader = '''
+#version 330 core
+
+in vec2 fragTexCoords;
+in vec3 fragNormal;
+in vec4 fragPosition;
+
+out vec4 fragColor;
+
+uniform float time;
+uniform sampler2D tex0;
+
+// Función de ruido hash
+float hash(vec3 p) {
+    p = fract(p * vec3(443.897, 441.423, 437.195));
+    p += dot(p, p.yzx + 19.19);
+    return fract((p.x + p.y) * p.z);
+}
+
+// Ruido 3D suave
+float noise3D(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    
+    return mix(
+        mix(mix(hash(i + vec3(0,0,0)), hash(i + vec3(1,0,0)), f.x),
+            mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+        mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+            mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
+        f.z
+    );
+}
+
+// Fractal Brownian Motion (FBM) - para nebulosas
+float fbm(vec3 p) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    float frequency = 1.0;
+    
+    for(int i = 0; i < 5; i++) {
+        value += amplitude * noise3D(p * frequency);
+        frequency *= 2.0;
+        amplitude *= 0.5;
+    }
+    return value;
+}
+
+// Función para crear estrellas parpadeantes
+float stars(vec3 p, float threshold) {
+    float n = hash(floor(p));
+    float twinkle = sin(time * 3.0 + n * 6.28) * 0.5 + 0.5;
+    return (n > threshold) ? twinkle : 0.0;
+}
+
+void main()
+{
+    // Coordenadas espaciales animadas
+    vec3 pos = fragPosition.xyz * 2.0;
+    vec3 animatedPos = pos + vec3(time * 0.1, time * 0.05, time * 0.08);
+    
+    // Crear nebulosas con FBM
+    float nebula1 = fbm(animatedPos * 0.8);
+    float nebula2 = fbm(animatedPos * 1.2 + vec3(100.0, 50.0, 75.0));
+    float nebula3 = fbm(animatedPos * 0.5 - vec3(50.0, 25.0, 100.0));
+    
+    // Colores de nebulosa (púrpura, azul, rosa)
+    vec3 color1 = vec3(0.4, 0.1, 0.6); // Púrpura profundo
+    vec3 color2 = vec3(0.1, 0.3, 0.8); // Azul espacial
+    vec3 color3 = vec3(0.8, 0.2, 0.5); // Rosa nebulosa
+    vec3 color4 = vec3(0.2, 0.5, 0.9); // Azul brillante
+    
+    // Mezclar colores de nebulosa basado en el ruido
+    vec3 nebulaColor = mix(color1, color2, nebula1);
+    nebulaColor = mix(nebulaColor, color3, nebula2 * 0.7);
+    nebulaColor = mix(nebulaColor, color4, nebula3 * 0.5);
+    
+    // Añadir variación temporal a los colores
+    nebulaColor += vec3(
+        sin(time * 0.5 + nebula1 * 3.14) * 0.1,
+        cos(time * 0.3 + nebula2 * 3.14) * 0.1,
+        sin(time * 0.7 + nebula3 * 3.14) * 0.1
+    );
+    
+    // Aumentar intensidad en zonas densas de nebulosa
+    float density = (nebula1 + nebula2 + nebula3) / 3.0;
+    nebulaColor *= 1.0 + density * 0.5;
+    
+    // Crear campo de estrellas con múltiples capas
+    vec3 starPos1 = pos * 15.0;
+    vec3 starPos2 = pos * 25.0 + vec3(100.0);
+    vec3 starPos3 = pos * 40.0 + vec3(200.0);
+    
+    float starField = stars(starPos1, 0.995) * 0.8;
+    starField += stars(starPos2, 0.997) * 0.6;
+    starField += stars(starPos3, 0.998) * 1.0;
+    
+    // Color de estrellas (blanco brillante con tinte azulado)
+    vec3 starColor = vec3(1.0, 0.95, 0.9) * starField;
+    
+    // Añadir algunas estrellas de colores
+    float coloredStars = stars(pos * 20.0, 0.998);
+    if(coloredStars > 0.5) {
+        float starHue = hash(floor(pos * 20.0));
+        if(starHue < 0.33)
+            starColor += vec3(0.8, 0.4, 0.4) * coloredStars; // Estrellas rojizas
+        else if(starHue < 0.66)
+            starColor += vec3(0.4, 0.6, 1.0) * coloredStars; // Estrellas azules
+        else
+            starColor += vec3(1.0, 0.9, 0.5) * coloredStars; // Estrellas amarillas
+    }
+    
+    // Combinar nebulosas y estrellas
+    vec3 cosmicColor = nebulaColor + starColor;
+    
+    // Añadir regiones más brillantes (núcleos de nebulosa)
+    float brightCore = pow(density, 3.0);
+    cosmicColor += vec3(0.6, 0.3, 0.8) * brightCore * 0.5;
+    
+    // Efecto de profundidad basado en la posición
+    float depth = sin(pos.x * 0.5 + time * 0.2) * cos(pos.z * 0.5 - time * 0.15);
+    cosmicColor *= 0.8 + depth * 0.2;
+    
+    // Mezclar sutilmente con la textura original
+    vec3 texColor = texture(tex0, fragTexCoords).rgb;
+    vec3 finalColor = mix(cosmicColor, texColor * cosmicColor, 0.2);
+    
+    fragColor = vec4(finalColor, 1.0);
+}
+'''
+
+
+# NUEVO SHADER 3: Procedural Pattern Shader - Patrones geométricos complejos
 pattern_shader = '''
 #version 330 core
 

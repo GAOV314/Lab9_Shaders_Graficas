@@ -9,6 +9,7 @@ class Obj(object):
 		self.texCoords = []
 		self.normals = []
 		self.faces = []
+		self.mtlFile = None
 		
 		for line in lines:
 			# Si la linea no cuenta con un prefijo y un valor,
@@ -42,4 +43,65 @@ class Obj(object):
 				for vert in verts:
 					vert = list(map(int, vert.split("/")))
 					face.append(vert)
-				self.faces.append(face)                                                                                                                                                                                                                                                                                                                                                                                           
+				self.faces.append(face)
+			
+			elif prefix == "mtllib": # Archivo MTL
+				import os
+				# Obtener el directorio del archivo OBJ
+				obj_dir = os.path.dirname(filename)
+				if not obj_dir:
+					obj_dir = "."  # Directorio actual si está vacío
+				mtl_filename = os.path.join(obj_dir, value.strip())
+				try:
+					self.mtlFile = self.LoadMTL(mtl_filename)
+				except Exception as e:
+					pass  # Silenciar errores de carga MTL
+	
+	def LoadMTL(self, filename):
+		"""Carga un archivo MTL y extrae las texturas"""
+		with open(filename, "r") as file:
+			lines = file.read().splitlines()
+		
+		materials = {}
+		current_material = None
+		
+		import os
+		mtl_dir = os.path.dirname(filename)
+		if not mtl_dir:
+			mtl_dir = "."  # Directorio actual si está vacío
+		
+		for line in lines:
+			line = line.strip()
+			if not line or line.startswith('#'):
+				continue
+			
+			parts = line.split()
+			if not parts:
+				continue
+			
+			prefix = parts[0]
+			
+			if prefix == "newmtl":
+				# Nuevo material
+				current_material = parts[1]
+				materials[current_material] = {}
+			
+			elif prefix == "map_Kd" and current_material:
+				# Textura difusa (color base)
+				texture_file = " ".join(parts[1:])
+				texture_path = os.path.join(mtl_dir, texture_file)
+				materials[current_material]['diffuse'] = texture_path
+			
+			elif prefix == "map_Ks" and current_material:
+				# Textura especular
+				texture_file = " ".join(parts[1:])
+				texture_path = os.path.join(mtl_dir, texture_file)
+				materials[current_material]['specular'] = texture_path
+			
+			elif prefix == "map_Bump" and current_material:
+				# Mapa de bump/normal
+				texture_file = " ".join(parts[1:])
+				texture_path = os.path.join(mtl_dir, texture_file)
+				materials[current_material]['bump'] = texture_path
+		
+		return materials                                                                                                                                                                                                                                                                                                                                                                                           

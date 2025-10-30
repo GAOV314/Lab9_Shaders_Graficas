@@ -39,8 +39,11 @@ rend.CreateSkybox(skyboxTextures)
 
 
 faceModel = Model("model.obj")
-#faceModel.AddTexture("textures/model.bmp")
-faceModel.AddTexture("textures/lava_cracks.jpg")
+# Las texturas se cargan automáticamente desde el archivo .mtl si existe
+# Si quieres usar texturas manuales, descomenta las siguientes líneas:
+# if len(faceModel.textures) == 0:
+# 	faceModel.AddTexture("textures/lava_cracks.jpg")
+
 faceModel.position.x = 0
 faceModel.position.y = -2
 faceModel.position.z = -12
@@ -54,13 +57,13 @@ print("="*60)
 print("\nFragment Shaders:")
 print("  1 - Basic Lighting")
 print("  2 - Rainbow/Gradient (NUEVO)")
-print("  3 - Procedural Pattern (NUEVO)")
-print("  4 - Toon Shader")
-print("  5 - Magma Shader")
+print("  3 - Cosmic Shader (NUEVO) - Galaxia con nebulosas y estrellas")
+print("  4 - Procedural Pattern (NUEVO)")
 print("\nVertex Shaders:")
 print("  7 - Standard")
-print("  8 - Twist (NUEVO)")
+print("  8 - Directional Fold (NUEVO) - Doblez como papel arrugado")
 print("  9 - Wave (NUEVO)")
+print("  0 - Vortex (NUEVO) - Efecto de remolino/torbellino")
 print("\nOtros controles:")
 print("  F - Toggle Wireframe/Filled")
 print("  Z/X - Ajustar value (intensidad de efectos)")
@@ -98,38 +101,36 @@ while isRunning:
 				print("Fragment: Rainbow/Gradient (NUEVO)")
 
 			if event.key == pygame.K_3:
+				currFragmentShader = cosmic_shader
+				rend.SetShaders(currVertexShader, currFragmentShader)
+				print("Fragment: Cosmic Shader (NUEVO) - Galaxia con nebulosas y estrellas")
+
+			if event.key == pygame.K_4:
 				currFragmentShader = pattern_shader
 				rend.SetShaders(currVertexShader, currFragmentShader)
 				print("Fragment: Procedural Pattern (NUEVO)")
 			
-			if event.key == pygame.K_4:
-				currFragmentShader = toon_shader
-				rend.SetShaders(currVertexShader, currFragmentShader)
-				print("Fragment: Toon Shader")
-			
-			if event.key == pygame.K_5:
-				currFragmentShader = magma_shader
-				rend.SetShaders(currVertexShader, currFragmentShader)
-				print("Fragment: Magma Shader")
-
 			# Vertex Shaders
 			if event.key == pygame.K_7:
 				currVertexShader = vertex_shader
 				rend.SetShaders(currVertexShader, currFragmentShader)
 				print("Vertex: Standard")
 
+
 			if event.key == pygame.K_8:
 				currVertexShader = twist_shader
 				rend.SetShaders(currVertexShader, currFragmentShader)
-				print("Vertex: Twist (NUEVO)")
-
+				print("Vertex: Directional Fold (NUEVO) - Doblez como papel arrugado")
+			
 			if event.key == pygame.K_9:
 				currVertexShader = wave_shader
 				rend.SetShaders(currVertexShader, currFragmentShader)
 				print("Vertex: Wave (NUEVO)")
-
-
-
+			
+			if event.key == pygame.K_0:
+				currVertexShader = jitter_shader
+				rend.SetShaders(currVertexShader, currFragmentShader)
+				print("Vertex: Vortex (NUEVO) - Efecto de remolino/torbellino")
 	if keys[K_UP]:
 		rend.camera.position.z -= 5 * deltaTime
 

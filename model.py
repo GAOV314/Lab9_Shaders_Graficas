@@ -17,6 +17,9 @@ class Model(object):
 		self.BuildBuffers()
 
 		self.textures = []
+		
+		# Cargar texturas desde el archivo MTL si existe
+		self.LoadTexturesFromMTL()
 
 	def GetModelMatrix(self):
 
@@ -110,6 +113,22 @@ class Model(object):
 		glGenerateMipmap(GL_TEXTURE_2D)
 
 		self.textures.append(texture)
+	
+	
+	def LoadTexturesFromMTL(self):
+		"""Carga automáticamente las texturas desde el archivo MTL"""
+		if self.objFile.mtlFile:
+			for material_name, material_data in self.objFile.mtlFile.items():
+				if 'diffuse' in material_data:
+					import os
+					texture_path = material_data['diffuse']
+					
+					if os.path.exists(texture_path):
+						try:
+							self.AddTexture(texture_path)
+						except Exception as e:
+							pass
+
 
 
 	def Render(self):
